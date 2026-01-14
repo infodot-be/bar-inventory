@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Select Location - Bar Inventory{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="text-center mb-4">
+            <i class="bi bi-geo-alt-fill"></i> Select Location
+        </h2>
+    </div>
+</div>
+
+<div class="row">
+    {% for location in locations %}
+    <div class="col-12 col-md-6 col-lg-4 mb-3">
+        <a href="{% url 'inventory:location_detail' location.id %}" class="text-decoration-none">
+            <div class="card location-card h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-building" style="font-size: 3rem; color: #0d6efd;"></i>
+                    <h5 class="card-title mt-3">{{ location.name }}</h5>
+                    {% if location.description %}
+                    <p class="card-text text-muted small">{{ location.description }}</p>
+                    {% endif %}
+                    <div class="mt-3">
+                        <span class="badge bg-primary">
+                            {{ location.beverages.count }} beverages
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center" role="alert">
+            <i class="bi bi-info-circle"></i> No locations available. Please add locations in the admin panel.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
