@@ -16,11 +16,48 @@ A mobile-friendly Django application for managing bar beverage inventory across 
 - Django 5.0+
 - Bootstrap 5.3
 - HTMX 1.9
-- SQLite (default, easily switchable to PostgreSQL/MySQL)
+- SQLite (development) / MySQL 8.0 (production)
+- Docker & Docker Compose
 
 ## Installation
 
-### 1. Set up virtual environment
+### Option 1: Docker (Recommended)
+
+#### Development Mode (SQLite)
+
+```bash
+# Start the application with SQLite
+docker-compose up -d
+
+# Run migrations
+docker-compose exec web python manage.py migrate
+
+# Create a superuser
+docker-compose exec web python manage.py createsuperuser
+```
+
+Visit http://localhost:8332 to access the application.
+
+#### Production Mode (MySQL)
+
+```bash
+# Edit docker-compose.yml and change DJANGO_ENV to prod:
+# environment:
+#   - DJANGO_ENV=prod
+
+# Start services (includes MySQL)
+docker-compose up -d
+
+# Wait for MySQL to be ready, then run migrations
+docker-compose exec web python manage.py migrate
+
+# Create a superuser
+docker-compose exec web python manage.py createsuperuser
+```
+
+### Option 2: Local Development (Without Docker)
+
+#### 1. Set up virtual environment
 
 ```bash
 python3 -m venv venv
@@ -29,26 +66,27 @@ source venv/bin/activate  # On macOS/Linux
 venv\Scripts\activate  # On Windows
 ```
 
-### 2. Install dependencies
+#### 2. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Run migrations
+#### 3. Run migrations
 
 ```bash
+cd code
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 4. Create a superuser
+#### 4. Create a superuser
 
 ```bash
 python manage.py createsuperuser
 ```
 
-### 5. Run the development server
+#### 5. Run the development server
 
 ```bash
 python manage.py runserver
@@ -123,17 +161,41 @@ Use the admin panel to:
 - Automatically calculates liters
 - Tracks last update time
 
-## Mobile Optimization
+## Configuration
 
-- Large touch-friendly buttons
-- Responsive card-based layout
-- Minimal data transfer with HTMX partial updates
-- Works offline with cached data (browser dependent)
-- Fast page loads with optimized assets
+### Environment Variables
 
-## Development
+The application uses the following environment variables:
 
-### Project Structure
+- **DJANGO_ENV**: Set to `prod` for production (MySQL) or `dev` for development (SQLite). Default: `dev`
+- **DB_HOST**: MySQL host. Default: `db`
+- **DB_NAME**: MySQL database name. Default: `bar_inventory`
+- **DB_USER**: MySQL username. Default: `bar_user`
+- **DB_PASSWORD**: MySQL password. Default: `bar_password`
+- **DB_PORT**: MySQL port. Default: `3306`
+
+### Database Configuration
+
+The application automatically selects the database based on `DJANGO_ENV`:
+
+- **Development (`DJANGO_ENV=dev`)**: Uses SQLite (file-based, no setup required)
+- **Production (`DJANGO_ENV=prod`)**: Uses MySQL (requires MySQL service)
+
+To switch between databases, simply change the `DJANGO_ENV` variable in docker-compose.yml.
+
+## Production Deployment
+
+For production deployment:
+
+1. Set `DJANGO_ENV=prod` in docker-compose.yml
+2. Set `DEBUG = False` in settings.py
+3. Configure `ALLOWED_HOSTS` with your domain
+4. Generate a secure `SECRET_KEY`
+5. Change default MySQL passwords in docker-compose.yml
+6. Configure static file serving
+7. Use a production WSGI server (gunicorn, uWSGI)
+8. Set up HTTPS with reverse proxy (nginx/Apache)
+9. Set up regular database backupsucture
 
 ```
 bar_inventory/
