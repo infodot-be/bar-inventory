@@ -67,10 +67,7 @@ nano ~/bar-inventory/code/bar_inventory/settings.py
 Make these changes:
 
 ```python
-# Add your PythonAnywhere domain to ALLOWED_HOSTS
-ALLOWED_HOSTS = ['yourusername.pythonanywhere.com', 'your-custom-domain.com']
-
-# Note: SECRET_KEY and DEBUG will be set via environment variables in WSGI file
+# Note: SECRET_KEY, DEBUG, and ALLOWED_HOSTS will be set via environment variables in WSGI file
 # For free tier, use SQLite (keep DJANGO_ENV=dev)
 # For paid tier with MySQL, set DJANGO_ENV=prod and configure database credentials
 ```
@@ -134,6 +131,9 @@ os.environ['SECRET_KEY'] = 'your-production-secret-key-here-replace-with-generat
 
 # Set DEBUG to False for production
 os.environ['DEBUG'] = 'False'
+
+# Set ALLOWED_HOSTS (comma-separated list of domains)
+os.environ['ALLOWED_HOSTS'] = 'yourusername.pythonanywhere.com,your-custom-domain.com'
 
 # For production, you might want to set DJANGO_ENV
 # os.environ['DJANGO_ENV'] = 'dev'  # or 'prod' if using MySQL
@@ -202,6 +202,7 @@ DJANGO_ENV = os.environ.get('DJANGO_ENV', 'dev')
 # In your WSGI file, add:
 os.environ['SECRET_KEY'] = 'your-production-secret-key-here'
 os.environ['DEBUG'] = 'False'
+os.environ['ALLOWED_HOSTS'] = 'yourusername.pythonanywhere.com,your-custom-domain.com'
 os.environ['DJANGO_ENV'] = 'prod'
 os.environ['DB_HOST'] = 'yourusername.mysql.pythonanywhere-services.com'
 os.environ['DB_NAME'] = 'yourusername$bar_inventory'
@@ -308,7 +309,7 @@ Then reload your web app from the Web tab.
 
 - [ ] Set `DEBUG` environment variable to `'False'` in WSGI file
 - [ ] Generated and set unique `SECRET_KEY` in WSGI file (use https://djecrety.ir/)
-- [ ] Added proper domains to `ALLOWED_HOSTS` in settings.py
+- [ ] Set `ALLOWED_HOSTS` with your actual domain(s) in WSGI file (comma-separated)
 - [ ] Database credentials are secure (set in WSGI file, not in code)
 - [ ] Admin account has strong password
 - [ ] Regular backups configured
@@ -322,7 +323,7 @@ If you want to use a custom domain:
 2. Add custom domain in "Domain names" section
 3. Update DNS records at your domain registrar:
    - Add CNAME record pointing to `yourusername.pythonanywhere.com`
-4. Update `ALLOWED_HOSTS` in settings.py
+4. Update `ALLOWED_HOSTS` environment variable in WSGI file to include your custom domain
 5. Reload web app
 
 ## Backup Strategy
