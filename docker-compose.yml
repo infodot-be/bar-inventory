@@ -1,0 +1,11 @@
+services:
+  web:
+    build:
+       context: ./
+       dockerfile: Dockerfile
+    command: python3 manage.py runserver 0.0.0.0:8332
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - ./code:/code
+    ports:
+      - "8332:8332"

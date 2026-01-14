@@ -14,7 +14,7 @@
 <div class="row">
     {% for location in locations %}
     <div class="col-12 col-md-6 col-lg-4 mb-3">
-        <a href="{% url 'inventory:location_detail' location.id %}" class="text-decoration-none">
+        <a href="{% url 'stock:location_detail' location.id %}" class="text-decoration-none">
             <div class="card location-card h-100">
                 <div class="card-body text-center">
                     <i class="bi bi-building" style="font-size: 3rem; color: #0d6efd;"></i>

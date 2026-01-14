@@ -1,17 +1,21 @@
+{% load humanize %}
+{% load stock_filters %}
 <div class="card fade-in">
     <div class="card-body">
         <div class="row align-items-center">
             <div class="col-6">
                 <h5 class="card-title mb-1">{{ beverage.name }}</h5>
                 <small class="text-muted">
-                    <i class="bi bi-box"></i> {{ beverage.unit_type.get_name_display }}
-                    ({{ beverage.unit_type.liters_per_unit }}L each)
+                    <i class="bi bi-box"></i> {{ beverage.unit_type }}
+                    {% if beverage.liters_per_unit > 0 %}
+                    ({{ beverage.liters_per_unit }}L each)
+                    {% endif %}
                 </small>
             </div>
             <div class="col-6 text-end">
                 <div class="quantity-display">{{ stock.quantity }}</div>
                 <div class="liters-display">
-                    <i class="bi bi-droplet-fill"></i> {{ liters|floatformat:2 }}L
+                    <i class="bi bi-droplet-fill"></i> {{ liters|floor_decimal:2 }}L
                 </div>
             </div>
         </div>
@@ -20,7 +24,7 @@
             <div class="col-4 text-center">
                 <button
                     class="btn btn-danger btn-adjust"
-                    hx-post="{% url 'inventory:quick_adjust' stock.id %}"
+                    hx-post="{% url 'stock:quick_adjust' stock.id %}"
                     hx-target="#stock-{{ stock.id }}"
                     hx-swap="innerHTML"
                     hx-vals='{"adjustment": "-1"}'
@@ -39,7 +43,7 @@
             <div class="col-4 text-center">
                 <button
                     class="btn btn-success btn-adjust"
-                    hx-post="{% url 'inventory:quick_adjust' stock.id %}"
+                    hx-post="{% url 'stock:quick_adjust' stock.id %}"
                     hx-target="#stock-{{ stock.id }}"
                     hx-swap="innerHTML"
                     hx-vals='{"adjustment": "1"}'
@@ -51,7 +55,7 @@
 
         <div class="mt-2">
             <small class="text-muted">
-                <i class="bi bi-clock"></i> Last updated: {{ stock.last_updated|date:"Y-m-d H:i" }}
+                <i class="bi bi-clock"></i> Updated {{ stock.last_updated|naturaltime }}
             </small>
         </div>
     </div>

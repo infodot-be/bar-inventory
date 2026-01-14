@@ -1,0 +1,710 @@
+{% extends 'base.html' %}
+{% load stock_filters %}
+
+{% block title %}Stock Overview - Bar Inventory{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block nav_actions %}
+<a href="{% url 'inventory:index' %}" class="btn btn-outline-light btn-sm">
+    <i class="bi bi-house"></i> Home
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2 class="text-center mb-4">
+            <i class="bi bi-bar-chart-fill"></i> Stock Overview
+            {% if selected_location %}
+            - {{ selected_location.name }}
+            {% endif %}
+        </h2>
+        {% if selected_location %}
+        <div class="text-center mb-3">
+            <a href="{% url 'stock:overview' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> View All Locations
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if not selected_location %}
+<!-- Location Summaries -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="mb-3"><i class="bi bi-geo-alt"></i> Stock by Location</h4>
+    </div>
+    {% for summary in location_summaries %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-building"></i> {{ summary.location.name }}
+                </h5>
+                <div class="text-center mt-3">
+                    <div class="text-muted small">Items</div>
+                    <h4 class="mb-0">{{ summary.item_count }}</h4>
+                </div>
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{% url 'stock:location_detail' summary.location.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-box-seam"></i> View Stock
+                    </a>
+                    <a href="{% url 'stock:overview_location' summary.location.id %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-bar-chart"></i> View Overview
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle"></i> No locations with stock data available.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if selected_location and chart_data %}
+<!-- Combined Chart for All Beverages -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="mb-3"><i class="bi bi-graph-up"></i> Combined Stock Overview</h4>
+        <div class="card">
+            <div class="card-body">
+                <div style="position: relative; height: 400px;">
+                    <canvas id="chart-combined"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Time Series Charts for Each Beverage -->
+<div class="row mb-4">
+    <div class="col-12">
+        <h4 class="mb-3"><i class="bi bi-graph-up"></i> Individual Stock Trends</h4>
+    </div>
+    {% for beverage in all_beverages %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    {{ beverage.name }} ({{ beverage.unit_type }})
+                    <span id="trend-{{ beverage.id }}" class="ms-2"></span>
+                </h6>
+                <div class="chart-container">
+                    <canvas id="chart-{{ beverage.id }}"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Recent Stock Counts -->
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-3"><i class="bi bi-clock-history"></i> Recent Stock Counts</h4>
+        <div class="card">
+            <div class="card-body">
+                {% if count_data %}
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date & Time</th>
+                                {% for beverage in all_beverages %}
+                                <th class="text-center">{{ beverage.name }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in count_data %}
+                            <tr>
+                                <td>{{ data.count.timestamp|date:"Y-m-d H:i" }}</td>
+                                {% for beverage in all_beverages %}
+                                <td class="text-center">
+                                    {% with qty=data.beverages|get_item:beverage.id %}
+                                        {% if qty %}{{ qty }}{% else %}—{% endif %}
+                                    {% endwith %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted mb-0">
+                    <i class="bi bi-info-circle"></i> No stock counts recorded yet.
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="d-grid gap-2">
+            <a href="{% url 'inventory:index' %}" class="btn btn-lg btn-success">
+                <i class="bi bi-house"></i> Go to Location Selection
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if selected_location and chart_data %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = {{ chart_data|safe }};
+    console.log('Chart data loaded:', chartData);
+
+    // Use blue color for all charts
+    const color = 'rgb(54, 162, 235)';
+
+    // Function to calculate smooth rolling trendline
+    function calculateTrendline(data, labels, alarmMin) {
+        const n = data.length;
+        if (n < 2) return { trendline: data, extendedLabels: labels, crossingPoint: null, trendDirection: 'stable' };
+
+        const windowSize = 3;
+        const trendline = [];
+
+        // Calculate trendline using rolling window approach for smooth transitions
+        for (let i = 0; i < n; i++) {
+            // Define window boundaries
+            const windowStart = Math.max(0, i - Math.floor(windowSize / 2));
+            const windowEnd = Math.min(n, windowStart + windowSize);
+            const actualWindowStart = Math.max(0, windowEnd - windowSize);
+
+            const windowData = data.slice(actualWindowStart, windowEnd);
+            const windowLength = windowData.length;
+
+            if (windowLength < 2) {
+                trendline.push(data[i]);
+                continue;
+            }
+
+            // Calculate linear regression for this window
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            for (let j = 0; j < windowLength; j++) {
+                sumX += j;
+                sumY += windowData[j];
+                sumXY += j * windowData[j];
+                sumXX += j * j;
+            }
+
+            const slope = (windowLength * sumXY - sumX * sumY) / (windowLength * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / windowLength;
+
+            // Calculate trendline value for the center point of this window
+            const centerIndex = i - actualWindowStart;
+            trendline.push(slope * centerIndex + intercept);
+        }
+
+        // Calculate overall trend direction from last window
+        const lastWindowStart = Math.max(0, n - windowSize);
+        const lastWindow = data.slice(lastWindowStart, n);
+        let overallSlope = 0;
+
+        if (lastWindow.length >= 2) {
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            for (let i = 0; i < lastWindow.length; i++) {
+                sumX += i;
+                sumY += lastWindow[i];
+                sumXY += i * lastWindow[i];
+                sumXX += i * i;
+            }
+            overallSlope = (lastWindow.length * sumXY - sumX * sumY) / (lastWindow.length * sumXX - sumX * sumX);
+        }
+
+        let trendDirection = 'stable';
+        if (overallSlope < -0.1) trendDirection = 'down';
+        else if (overallSlope > 0.1) trendDirection = 'up';
+
+        // Calculate average consumption rate from recent data
+        const recentPoints = Math.min(3, n);
+        let totalChange = 0;
+        for (let i = n - recentPoints; i < n - 1; i++) {
+            totalChange += (data[i + 1] - data[i]);
+        }
+        const avgChangePerCount = totalChange / (recentPoints - 1);
+
+        let extendedLabels = [...labels];
+        let extendedTrendline = [...trendline];
+        let crossingPoints = []; // Array to hold all crossing points
+
+        const lastActualValue = data[n - 1];
+        const lastTrendValue = trendline[n - 1];
+
+        // Detect all crossings in the historical trendline data
+        for (let i = 1; i < trendline.length; i++) {
+            const prevValue = trendline[i - 1];
+            const currValue = trendline[i];
+
+            // Check if the trendline crosses the alarm line between these two points
+            if ((prevValue > alarmMin && currValue <= alarmMin) || (prevValue < alarmMin && currValue >= alarmMin)) {
+                // Linear interpolation to find exact crossing point
+                const ratio = (alarmMin - prevValue) / (currValue - prevValue);
+                const exactIndex = (i - 1) + ratio;
+
+                crossingPoints.push({
+                    index: exactIndex,
+                    value: alarmMin
+                });
+            }
+        }
+
+        // Calculate average time between counts from actual timestamps
+        let avgMinutesBetweenCounts = 30; // Default fallback
+        if (n >= 2) {
+            // Parse timestamps to calculate actual intervals
+            try {
+                const recentLabels = labels.slice(-Math.min(5, n)); // Use last 5 timestamps
+                const timestamps = recentLabels.map(label => {
+                    // Parse "MM/DD HH:MM" format
+                    const [date, time] = label.split(' ');
+                    const [month, day] = date.split('/');
+                    const [hours, minutes] = time.split(':');
+                    const now = new Date();
+                    const d = new Date(now.getFullYear(), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes));
+                    return d.getTime();
+                });
+
+                // Calculate average interval in minutes
+                let totalMinutes = 0;
+                for (let i = 1; i < timestamps.length; i++) {
+                    totalMinutes += (timestamps[i] - timestamps[i-1]) / (1000 * 60);
+                }
+                avgMinutesBetweenCounts = totalMinutes / (timestamps.length - 1);
+            } catch (e) {
+                console.log('Could not parse timestamps, using default interval');
+            }
+        }
+
+        // Fixed number of future points to keep graph compact
+        const maxFuturePoints = 3;
+
+        // If trending downward, project the future
+        if (overallSlope < 0) {
+            // Project future trend for only 3 points
+            for (let i = 1; i <= maxFuturePoints; i++) {
+                const y = lastTrendValue + (overallSlope * i);
+                extendedTrendline.push(y);
+                const minutesAhead = Math.round(i * avgMinutesBetweenCounts);
+                extendedLabels.push('+' + minutesAhead + 'min');
+            }
+
+            // Calculate where trendline crosses alarm minimum (if it does)
+            // Formula: lastTrendValue + (overallSlope * i) = alarmMin
+            // Solving for i: i = (alarmMin - lastTrendValue) / overallSlope
+            const exactCrossingPoint = (alarmMin - lastTrendValue) / overallSlope;
+
+            // Check if the trendline crosses the alarm line within the projected window
+            // This includes cases where:
+            // 1. Starting above alarm and crossing down (exactCrossingPoint > 0)
+            // 2. The crossing happens within the 3-point window
+            const firstProjectedValue = lastTrendValue + overallSlope;
+            const lastProjectedValue = lastTrendValue + (overallSlope * maxFuturePoints);
+
+            // Check if alarm line is crossed within the projection window
+            const crossesFromAbove = lastTrendValue > alarmMin && lastProjectedValue < alarmMin;
+            const crossesWithinWindow = exactCrossingPoint > 0 && exactCrossingPoint <= maxFuturePoints;
+
+            if (crossesFromAbove && crossesWithinWindow) {
+                crossingPoints.push({
+                    index: n - 1 + exactCrossingPoint,
+                    value: alarmMin
+                });
+            }
+        }
+
+        return { trendline: extendedTrendline, extendedLabels: extendedLabels, crossingPoints: crossingPoints, trendDirection: trendDirection };
+    }
+
+    // Create a chart for each beverage
+    {% for beverage in all_beverages %}
+    (function() {
+        const beverageId = {{ beverage.id }};
+        const data = chartData[beverageId];
+        console.log('Beverage', beverageId, 'data:', data);
+
+        if (data && data.labels && data.labels.length > 0) {
+            const alarmMin = data.alarm_minimum || 0;
+            const beverageColor = data.color || 'rgb(54, 162, 235)';
+            const trendResult = calculateTrendline(data.data, data.labels, alarmMin);
+
+            // Helper function to parse date strings - now handles ISO format
+            function parseDate(dateStr) {
+                // ISO format: directly parse it
+                return new Date(dateStr);
+            }
+
+            // Get the last actual timestamp for calculating future timestamps
+            const lastTimestamp = parseDate(data.labels[data.labels.length - 1]);
+
+            // Convert labels to timestamps for time scale
+            const timestamps = trendResult.extendedLabels.map((label, index) => {
+                if (label.startsWith('+')) {
+                    // Future prediction - extract minutes and add to last timestamp
+                    const minutes = parseInt(label.replace('+', '').replace('min', ''));
+                    return new Date(lastTimestamp.getTime() + minutes * 60000);
+                } else {
+                    return parseDate(label);
+                }
+            });
+
+            // Convert data to {x, y} format for time scale
+            const quantityData = trendResult.extendedLabels.map((label, index) => {
+                const value = index < data.data.length ? data.data[index] : null;
+                return value !== null ? { x: timestamps[index], y: value } : null;
+            }).filter(point => point !== null);
+
+            const trendData = timestamps.map((timestamp, index) => ({
+                x: timestamp,
+                y: trendResult.trendline[index]
+            }));
+
+            const ctx = document.getElementById('chart-' + beverageId).getContext('2d');
+
+            const datasets = [{
+                label: 'Quantity',
+                data: quantityData,
+                borderColor: beverageColor,
+                backgroundColor: beverageColor.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                tension: 0.4,
+                fill: true,
+                order: 2,
+                spanGaps: false
+            }, {
+                label: 'Trend',
+                data: trendData,
+                borderColor: 'rgba(54, 162, 235, 0.5)',
+                borderDash: [5, 5],
+                borderWidth: 2,
+                fill: false,
+                tension: 0,
+                pointRadius: 0,
+                order: 1
+            }];
+
+            // Add crossing point markers if they exist
+            const crossingAnnotations = {};
+            if (trendResult.crossingPoints && trendResult.crossingPoints.length > 0) {
+                const crossingData = trendResult.crossingPoints.map(crossing => {
+                    const index = Math.round(crossing.index);
+                    if (index >= 0 && index < timestamps.length) {
+                        return { x: timestamps[index], y: crossing.value };
+                    }
+                    return null;
+                }).filter(point => point !== null);
+
+                datasets.push({
+                    label: 'Alert Crossing',
+                    data: crossingData,
+                    borderColor: 'rgba(255, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(255, 0, 0, 0.8)',
+                    pointRadius: 8,
+                    pointStyle: 'triangle',
+                    showLine: false,
+                    order: 0
+                });
+
+                // Create annotations for crossing point labels
+                trendResult.crossingPoints.forEach((crossing, idx) => {
+                    const index = Math.round(crossing.index);
+                    if (index >= 0 && index < timestamps.length) {
+                        const timestamp = timestamps[index];
+                        const dateStr = timestamp.toLocaleString('en-US', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                        });
+
+                        crossingAnnotations[`crossing${idx}`] = {
+                            type: 'label',
+                            xValue: timestamp,
+                            yValue: crossing.value,
+                            backgroundColor: 'rgba(255, 0, 0, 0.9)',
+                            color: 'white',
+                            content: dateStr,
+                            font: {
+                                size: 10,
+                                weight: 'bold'
+                            },
+                            padding: 4,
+                            borderRadius: 3,
+                            yAdjust: -20
+                        };
+                    }
+                });
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                alarmZone: {
+                                    type: 'box',
+                                    yMin: 0,
+                                    yMax: alarmMin,
+                                    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+                                    borderColor: 'rgba(255, 0, 0, 0.3)',
+                                    borderWidth: 1,
+                                    label: {
+                                        display: true,
+                                        content: 'Low Stock Zone',
+                                        position: 'start',
+                                        color: 'rgba(255, 0, 0, 0.8)',
+                                        font: {
+                                            size: 10
+                                        }
+                                    }
+                                },
+                                alarmLine: {
+                                    type: 'line',
+                                    yMin: alarmMin,
+                                    yMax: alarmMin,
+                                    borderColor: 'rgba(255, 0, 0, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6]
+                                },
+                                nowLine: {
+                                    type: 'line',
+                                    xMin: new Date(),
+                                    xMax: new Date(),
+                                    borderColor: 'rgba(0, 0, 0, 0.5)',
+                                    borderWidth: 2,
+                                    borderDash: [3, 3],
+                                    label: {
+                                        display: true,
+                                        content: 'Now',
+                                        position: 'start',
+                                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                                        color: 'white',
+                                        font: {
+                                            size: 10
+                                        }
+                                    }
+                                },
+                                ...crossingAnnotations
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 10,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'hour',
+                                displayFormats: {
+                                    hour: 'MM/dd HH:mm'
+                                },
+                                tooltipFormat: 'MM/dd HH:mm'
+                            },
+                            adapters: {
+                                date: {
+                                    zone: 'local'
+                                }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Add trend direction indicator
+            const trendSpan = document.getElementById('trend-' + beverageId);
+            if (trendResult.trendDirection === 'down') {
+                trendSpan.innerHTML = '<i class=\"bi bi-arrow-down-circle-fill text-danger\" title=\"Decreasing\"></i>';
+            } else if (trendResult.trendDirection === 'up') {
+                trendSpan.innerHTML = '<i class=\"bi bi-arrow-up-circle-fill text-success\" title=\"Increasing\"></i>';
+            } else {
+                trendSpan.innerHTML = '<i class=\"bi bi-dash-circle-fill text-secondary\" title=\"Stable\"></i>';
+            }
+        }
+    })();
+    {% endfor %}
+    // Create combined chart with all beverages
+    (function() {
+        const ctx = document.getElementById('chart-combined').getContext('2d');
+        const datasets = [];
+
+        // Helper function to parse date strings - now handles ISO format
+        function parseDate(dateStr) {
+            // ISO format: directly parse it
+            return new Date(dateStr);
+        }
+
+        // Create a dataset for each beverage
+        {% for beverage in all_beverages %}
+        (function() {
+            const beverageId = {{ beverage.id }};
+            const data = chartData[beverageId];
+
+            if (data && data.labels && data.labels.length > 0) {
+                const beverageColor = data.color || 'rgb(54, 162, 235)';
+
+                // Create data array with {x, y} format for time scale
+                const beverageData = data.labels.map((label, index) => {
+                    // Skip future prediction labels (those starting with '+')
+                    if (label.startsWith('+')) return null;
+                    return {
+                        x: parseDate(label),
+                        y: data.data[index]
+                    };
+                }).filter(point => point !== null);
+
+                datasets.push({
+                    label: '{{ beverage.name }}',
+                    data: beverageData,
+                    borderColor: beverageColor,
+                    backgroundColor: beverageColor.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                    tension: 0.4,
+                    fill: false,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 5
+                });
+            }
+        })();
+        {% endfor %}
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    title: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'hour',
+                            displayFormats: {
+                                hour: 'MM/dd HH:mm'
+                            },
+                            tooltipFormat: 'MM/dd HH:mm'
+                        },
+                        adapters: {
+                            date: {
+                                zone: 'local'
+                            }
+                        },
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45,
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        },
+                        title: {
+                            display: true,
+                            text: 'Quantity'
+                        }
+                    }
+                }
+            }
+        });
+    })();});
+</script>
+{% endif %}
+{% endblock %}
