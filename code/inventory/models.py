@@ -1,4 +1,36 @@
 from django.db import models
+from django.contrib.auth.models import User
+import random
+
+
+# Predefined list of nice, distinct colors for beverages
+BEVERAGE_COLORS = [
+    'rgb(75, 192, 192)',   # Teal
+    'rgb(255, 159, 64)',   # Orange
+    'rgb(153, 102, 255)',  # Purple
+    'rgb(255, 206, 86)',   # Yellow
+    'rgb(231, 76, 60)',    # Dark Red
+    'rgb(46, 204, 113)',   # Green
+    'rgb(155, 89, 182)',   # Violet
+    'rgb(52, 152, 219)',   # Light Blue
+    'rgb(241, 196, 15)',   # Gold
+    'rgb(230, 126, 34)',   # Carrot
+    'rgb(26, 188, 156)',   # Turquoise
+    'rgb(149, 165, 166)',  # Gray
+    'rgb(236, 112, 99)',   # Pink
+    'rgb(142, 68, 173)',   # Deep Purple
+    'rgb(39, 174, 96)',    # Emerald
+    'rgb(243, 156, 18)',   # Bright Orange
+    'rgb(192, 57, 43)',    # Crimson
+    'rgb(22, 160, 133)',   # Dark Turquoise
+    'rgb(211, 84, 0)',     # Burnt Orange
+    'rgb(41, 128, 185)',   # Ocean Blue
+]
+
+
+def get_random_color():
+    """Get a random color from the predefined list."""
+    return random.choice(BEVERAGE_COLORS)
 
 
 class Location(models.Model):
@@ -6,6 +38,14 @@ class Location(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='location',
+        help_text="User assigned to this location (can only view this location)"
+    )
 
     class Meta:
         ordering = ['name']
@@ -51,7 +91,7 @@ class Beverage(models.Model):
     )
     color = models.CharField(
         max_length=20,
-        default='rgb(54, 162, 235)',
+        default=get_random_color,
         help_text="Color for chart display (e.g., 'rgb(255, 99, 132)' or '#ff6384')"
     )
     is_active = models.BooleanField(default=True)

@@ -8,7 +8,7 @@
                 <small class="text-muted">
                     <i class="bi bi-box"></i> {{ beverage.unit_type }}
                     {% if beverage.liters_per_unit > 0 %}
-                    ({{ beverage.liters_per_unit }}L each)
+                    ({{ beverage.liters_per_unit|floatformat:2 }}L each)
                     {% endif %}
                 </small>
             </div>

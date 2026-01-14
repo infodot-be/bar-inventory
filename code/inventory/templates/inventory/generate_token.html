@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Generate Token Link{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 col-md-8 offset-md-2">
+        <h2 class="text-center mb-4">
+            <i class="bi bi-key"></i> Token Login Link
+        </h2>
+
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <i class="bi bi-exclamation-triangle"></i> {{ error }}
+        </div>
+        {% endif %}
+
+        {% if token_url %}
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Login Link for {{ location.name }}</h5>
+                <p class="text-muted">User: {{ location.user.username }}</p>
+
+                <div class="mb-3">
+                    <label class="form-label">Token Link:</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="tokenUrl" value="{{ token_url }}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyToken()">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> This link allows {{ location.user.username }} to login and access only {{ location.name }}.
+                </div>
+
+                <a href="{% url 'admin:inventory_location_changelist' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Locations
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function copyToken() {
+    const input = document.getElementById('tokenUrl');
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value);
+
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+    }, 2000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,27 @@
+/* Color selector styles for beverage admin */
+.color-select-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.color-select {
+    min-width: 250px;
+}
+
+.color-preview-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #333;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Style dropdown options with color circles */
+.color-select option {
+    padding: 8px 8px 8px 45px;
+    background-repeat: no-repeat;
+    background-position: 8px center;
+    background-size: 25px 25px;
+}

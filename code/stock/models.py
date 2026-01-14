@@ -32,8 +32,6 @@ class StockCount(models.Model):
     """Represents a saved count/snapshot of inventory at a location."""
     location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='counts')
     timestamp = models.DateTimeField(auto_now_add=True)
-    counted_by = models.CharField(max_length=100, blank=True)
-    notes = models.TextField(blank=True)
 
     class Meta:
         ordering = ['-timestamp']

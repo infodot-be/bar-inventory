@@ -1,8 +1,8 @@
-"""
-Django settings for bar_inventory project.
+"""  Django settings for bar_inventory project.
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'import_export',
     'inventory',
     'stock',
 ]
@@ -63,12 +64,31 @@ WSGI_APPLICATION = 'bar_inventory.wsgi.application'
 
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Use MySQL in production, SQLite in development
+DJANGO_ENV = os.environ.get('DJANGO_ENV', 'dev')
+
+if DJANGO_ENV == 'prod':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('DB_NAME', 'bar_inventory'),
+            'USER': os.environ.get('DB_USER', 'bar_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', 'bar_password'),
+            'HOST': os.environ.get('DB_HOST', 'db'),
+            'PORT': os.environ.get('DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

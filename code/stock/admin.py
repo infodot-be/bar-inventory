@@ -1,9 +1,30 @@
 from django.contrib import admin
+from import_export import resources
+from import_export.admin import ImportExportModelAdmin
 from .models import Stock, StockCount, StockCountItem
 
 
+class StockResource(resources.ModelResource):
+    class Meta:
+        model = Stock
+        fields = ('id', 'beverage', 'location', 'quantity', 'last_updated', 'updated_by')
+
+
+class StockCountResource(resources.ModelResource):
+    class Meta:
+        model = StockCount
+        fields = ('id', 'location', 'timestamp')
+
+
+class StockCountItemResource(resources.ModelResource):
+    class Meta:
+        model = StockCountItem
+        fields = ('id', 'stock_count', 'beverage', 'quantity', 'liters', 'unit_type_name', 'liters_per_unit')
+
+
 @admin.register(Stock)
-class StockAdmin(admin.ModelAdmin):
+class StockAdmin(ImportExportModelAdmin):
+    resource_class = StockResource
     list_display = ['beverage', 'location', 'quantity', 'liters_display', 'last_updated', 'updated_by']
     list_filter = ['location', 'beverage__unit_type']
     search_fields = ['beverage__name', 'location__name']
@@ -22,10 +43,11 @@ class StockCountItemInline(admin.TabularInline):
 
 
 @admin.register(StockCount)
-class StockCountAdmin(admin.ModelAdmin):
-    list_display = ['location', 'timestamp', 'counted_by', 'item_count', 'total_liters_display']
+class StockCountAdmin(ImportExportModelAdmin):
+    resource_class = StockCountResource
+    list_display = ['location', 'timestamp', 'item_count', 'total_liters_display']
     list_filter = ['location', 'timestamp']
-    search_fields = ['location__name', 'counted_by', 'notes']
+    search_fields = ['location__name']
     readonly_fields = ['timestamp']
     inlines = [StockCountItemInline]
 
@@ -39,7 +61,8 @@ class StockCountAdmin(admin.ModelAdmin):
 
 
 @admin.register(StockCountItem)
-class StockCountItemAdmin(admin.ModelAdmin):
+class StockCountItemAdmin(ImportExportModelAdmin):
+    resource_class = StockCountItemResource
     list_display = ['stock_count', 'beverage', 'quantity', 'liters', 'unit_type_name']
     list_filter = ['stock_count__location', 'stock_count__timestamp']
     search_fields = ['beverage__name', 'stock_count__location__name']

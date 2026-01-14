@@ -1,0 +1,16 @@
+{% with id=widget.attrs.id %}
+<div class="color-select-wrapper">
+    <select name="{{ widget.name }}" id="{{ id }}" class="color-select">
+        {% for group, options, index in widget.optgroups %}
+            {% for option in options %}
+                <option value="{{ option.value }}"
+                        {% if option.selected %}selected{% endif %}
+                        data-color="{{ option.value }}">
+                    {{ option.label }}
+                </option>
+            {% endfor %}
+        {% endfor %}
+    </select>
+    <div class="color-preview-box" id="{{ id }}-preview"></div>
+</div>
+{% endwith %}

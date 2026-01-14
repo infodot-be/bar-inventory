@@ -2,12 +2,6 @@
 
 {% block title %}{{ location.name }} - Bar Inventory{% endblock %}
 
-{% block nav_actions %}
-<a href="{% url 'inventory:index' %}" class="btn btn-outline-light btn-sm">
-    <i class="bi bi-arrow-left"></i> Back
-</a>
-{% endblock %}
-
 {% block content %}
 <!-- Messages -->
 {% if messages %}
@@ -52,9 +46,12 @@
 {% if stock_data %}
 <div class="row mt-4">
     <div class="col-12">
-        <button type="button" class="btn btn-success btn-lg w-100" onclick="showSaveCountModal()">
-            <i class="bi bi-save"></i> Save Count
-        </button>
+        <form method="post" action="{% url 'stock:save_count' location.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success btn-lg w-100">
+                <i class="bi bi-save"></i> Save Count
+            </button>
+        </form>
     </div>
 </div>
 {% endif %}
@@ -84,40 +81,6 @@
         </div>
     </div>
 </div>
-
-<!-- Save Count Modal -->
-<div class="modal fade" id="saveCountModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Save Stock Count</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="post" action="{% url 'stock:save_count' location.id %}">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="counted_by" class="form-label">Counted By (optional)</label>
-                        <input type="text" class="form-control" id="counted_by" name="counted_by" placeholder="Your name">
-                    </div>
-                    <div class="mb-3">
-                        <label for="notes" class="form-label">Notes (optional)</label>
-                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any notes about this count"></textarea>
-                    </div>
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> This will save a snapshot of all current stock quantities at this location.
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Save Count
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -128,10 +91,6 @@ function showUpdateModal(stockId, currentQuantity) {
     currentStockId = stockId;
     document.getElementById('quantity').value = currentQuantity;
     new bootstrap.Modal(document.getElementById('updateModal')).show();
-}
-
-function showSaveCountModal() {
-    new bootstrap.Modal(document.getElementById('saveCountModal')).show();
 }
 
 function submitUpdate() {
