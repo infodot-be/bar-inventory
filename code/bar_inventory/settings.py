@@ -134,7 +134,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Timezone - can be overridden via environment variable
+# Common timezones: 'UTC', 'Europe/Brussels', 'Europe/Amsterdam', 'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Los_Angeles'
+TIME_ZONE = os.environ.get('TIME_ZONE', 'Europe/Brussels')
 
 USE_I18N = True
 
@@ -142,9 +144,18 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_URL = '/static/'
 STATIC_ROOT = os.environ.get('STATIC_ROOT', None)
+
+# Development static files directory (never include STATIC_ROOT here)
+# Only add if STATIC_ROOT is not set (i.e., in development)
+if STATIC_ROOT is None:
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'static'),
+    ]
+else:
+    # In production, STATICFILES_DIRS should be empty
+    STATICFILES_DIRS = []
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
