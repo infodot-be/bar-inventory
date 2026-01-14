@@ -1,7 +1,14 @@
-FROM python:3.12-bookworm AS builder
-RUN apt-get update && apt-get -y install gettext wkhtmltopdf binutils gcc 
+FROM python:3.13-slim AS builder
 ENV TZ Europe/Brussels
 RUN echo Europe/Brussels >/etc/timezone && dpkg-reconfigure -f noninteractive tzdata
+
+# Install build dependencies for mysqlclient
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    default-libmysqlclient-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
 RUN python -m pip install --upgrade pip
 ADD requirements.txt /
 # install the dependencies and packages in the requirements file
@@ -9,17 +16,18 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /wheels -r /requirements.txt
 
 
 # final stage
-FROM python:3.12-slim-bookworm
+FROM python:3.13-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV TZ=Europe/Brussels
 RUN echo Europe/Brussels >/etc/timezone && dpkg-reconfigure -f noninteractive tzdata
 
-# copy from the builder stage
-RUN apt-get update && apt-get -y install gettext wkhtmltopdf binutils \
-    && apt-get clean \
+# Install runtime dependencies for mysqlclient
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    default-mysql-client \
     && rm -rf /var/lib/apt/lists/*
+
 RUN python -m pip install --upgrade pip
 COPY --from=builder /wheels /wheels
 RUN pip install --no-cache /wheels/*

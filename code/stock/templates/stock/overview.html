@@ -95,10 +95,10 @@
     </div>
     {% for beverage in all_beverages %}
     <div class="col-md-6 mb-4">
-        <div class="card">
+        <div class="card" id="card-{{ beverage.id }}">
             <div class="card-body">
                 <h6 class="card-title">
-                    {{ beverage.name }} ({{ beverage.unit_type }})
+                    {{ beverage.name|title }} ({{ beverage.unit_type }})
                     <span id="trend-{{ beverage.id }}" class="ms-2"></span>
                 </h6>
                 <div class="chart-container">
@@ -124,7 +124,7 @@
                             <tr>
                                 <th>Date & Time</th>
                                 {% for beverage in all_beverages %}
-                                <th class="text-center">{{ beverage.name }}</th>
+                                <th class="text-center">{{ beverage.name|title }}</th>
                                 {% endfor %}
                             </tr>
                         </thead>
@@ -161,14 +161,14 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const chartData = {{ chart_data|safe }};
-    console.log('Chart data loaded:', chartData);
+    {% if DEBUG %}console.log('Chart data loaded:', chartData);{% endif %}
 
     // Create a chart for each beverage
     {% for beverage in all_beverages %}
     (function() {
         const beverageId = {{ beverage.id }};
         const data = chartData[beverageId];
-        console.log('Beverage', beverageId, 'data:', data);
+        {% if DEBUG %}console.log('Beverage', beverageId, 'data:', data);{% endif %}
 
         if (data && data.labels && data.labels.length > 0) {
             const alarmMin = data.alarm_minimum || 0;
@@ -202,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('chart-' + beverageId).getContext('2d');
 
             const datasets = [{
-                label: '{{ beverage.unit_type.name }}',
+                label: '{{ beverage.name|title }}',
                 data: quantityData,
                 borderColor: beverageColor,
                 backgroundColor: beverageColor.replace('rgb', 'rgba').replace(')', ', 0.1)'),
@@ -388,6 +388,15 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 trendSpan.innerHTML = '<i class=\"bi bi-dash-circle-fill text-secondary\" title=\"Stable\"></i>';
             }
+
+            // Check if current stock is below alarm minimum
+            const currentQuantity = data.data[data.data.length - 1];
+            const cardElement = document.getElementById('card-' + beverageId);
+            if (currentQuantity < alarmMin) {
+                cardElement.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                cardElement.style.borderColor = '#dc3545';
+                cardElement.style.borderWidth = '2px';
+            }
         }
     })();
     {% endfor %}
@@ -413,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const beverageData = createTimeSeriesData(data.labels, dataInLiters);
 
                 datasets.push({
-                    label: '{{ beverage.name }}',
+                    label: '{{ beverage.name|title }}',
                     data: beverageData,
                     borderColor: beverageColor,
                     backgroundColor: beverageColor.replace('rgb', 'rgba').replace(')', ', 0.1)'),

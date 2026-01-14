@@ -1,19 +1,19 @@
 services:
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: bar_inventory
-      MYSQL_USER: bar_user
-      MYSQL_PASSWORD: bar_password
-      MYSQL_ROOT_PASSWORD: root_password
-    volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
+  # db:
+  #   image: mysql:8.0
+  #   environment:
+  #     MYSQL_DATABASE: bar_inventory
+  #     MYSQL_USER: bar_user
+  #     MYSQL_PASSWORD: bar_password
+  #     MYSQL_ROOT_PASSWORD: root_password
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   ports:
+  #     - "3306:3306"
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     timeout: 20s
+  #     retries: 10
 
   web:
     build:
@@ -32,9 +32,9 @@ services:
       - ./code:/code
     ports:
       - "8332:8332"
-    depends_on:
-      db:
-        condition: service_healthy
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
 
 volumes:
   mysql_data:

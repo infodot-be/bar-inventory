@@ -4,6 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.db.models.functions import Lower
 from django.utils import timezone
+from django.conf import settings
 from inventory.models import Location, Beverage
 from .models import Stock, StockCount
 from .utils import (
@@ -91,6 +92,7 @@ def stock_overview(request, location_id=None):
         'count_data': count_data,
         'chart_data': chart_data_json,
         'current_time': timezone.now(),
+        'DEBUG': settings.DEBUG,
     }
 
     return render(request, 'stock/overview.html', context)

@@ -4,7 +4,7 @@
     <div class="card-body">
         <div class="row align-items-center">
             <div class="col-6">
-                <h5 class="card-title mb-1">{{ beverage.name }}</h5>
+                <h5 class="card-title mb-1">{{ beverage.name|title }}</h5>
                 <small class="text-muted">
                     <i class="bi bi-box"></i> {{ beverage.unit_type }}
                     {% if beverage.liters_per_unit > 0 %}
@@ -13,7 +13,7 @@
                 </small>
             </div>
             <div class="col-6 text-end">
-                <div class="quantity-display">{{ stock.quantity }}</div>
+                <div class="quantity-display">{{ stock.quantity|floatformat:0 }}</div>
                 <div class="liters-display">
                     <i class="bi bi-droplet-fill"></i> {{ liters|floor_decimal:2 }}L
                 </div>
