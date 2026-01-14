@@ -64,28 +64,16 @@ The settings.py file is already configured to read from environment variables wi
 
 ### 7. Set Up Static Files
 
-**Important:** Before collecting static files, you need to configure STATIC_ROOT in settings.py.
+**Note:** STATIC_ROOT will be configured via environment variable in the WSGI file (step 10).
 
-1. Edit settings.py to add STATIC_ROOT:
-
-```bash
-nano ~/bar-inventory/code/bar_inventory/settings.py
-```
-
-Add these lines near the bottom (after STATIC_URL):
-
-```python
-STATIC_ROOT = '/home/yourusername/bar-inventory/code/static'
-```
-
-**Replace `yourusername` with your actual PythonAnywhere username.**
-
-2. Collect static files:
+Collect static files:
 
 ```bash
 cd ~/bar-inventory/code
 python manage.py collectstatic --noinput
 ```
+
+**Note:** This step may fail if STATIC_ROOT is not set yet. If it does, skip for now and run it again after configuring the WSGI file (step 10) and reloading the web app.
 
 ### 8. Run Database Migrations
 
@@ -139,7 +127,11 @@ os.environ['SECRET_KEY'] = 'your-production-secret-key-here-replace-with-generat
 os.environ['DEBUG'] = 'False'
 
 # Set ALLOWED_HOSTS (comma-separated list of domains)
-os.environ['ALLOWED_HOSTS'] = 'yourusername.pythonanywhere.com,your-custom-domain.com'
+os.environ['ALLOWED_HOSTS'] = 'yourusername.pythonanywhere.com'
+# For multiple domains: 'yourusername.pythonanywhere.com,custom-domain.com'
+
+# Static files directory (required for collectstatic)
+os.environ['STATIC_ROOT'] = '/home/yourusername/bar-inventory/code/static'
 
 # Security settings for production
 # Note: PythonAnywhere provides HTTPS on *.pythonanywhere.com domains automatically
@@ -502,6 +494,7 @@ Schedule this daily in the "Tasks" tab.
 SECRET_KEY='...'                    # Generate at https://djecrety.ir/
 DEBUG='False'                       # Must be False in production
 ALLOWED_HOSTS='domain.com'          # Your actual domain(s), comma-separated
+STATIC_ROOT='/path/to/static'       # Absolute path for collected static files
 ```
 
 **Security Settings (Recommended):**
