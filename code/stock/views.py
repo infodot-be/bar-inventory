@@ -127,7 +127,16 @@ def location_detail(request, location_id):
 @require_http_methods(["POST"])
 def update_stock(request, stock_id):
     """Update stock quantity via HTMX."""
+    # Check authentication
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+
     stock = get_object_or_404(Stock, id=stock_id)
+
+    # Authorization: Check if user has access to this location
+    if not request.user.is_staff:
+        if not (hasattr(request.user, 'location') and request.user.location and request.user.location.id == stock.location.id):
+            return JsonResponse({'error': 'Permission denied'}, status=403)
 
     try:
         new_quantity = request.POST.get('quantity', '0')
@@ -148,7 +157,16 @@ def update_stock(request, stock_id):
 @require_http_methods(["POST"])
 def quick_adjust(request, stock_id):
     """Quick adjust stock (increment/decrement) via HTMX."""
+    # Check authentication
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+
     stock = get_object_or_404(Stock, id=stock_id)
+
+    # Authorization: Check if user has access to this location
+    if not request.user.is_staff:
+        if not (hasattr(request.user, 'location') and request.user.location and request.user.location.id == stock.location.id):
+            return JsonResponse({'error': 'Permission denied'}, status=403)
 
     try:
         adjustment = request.POST.get('adjustment', '0')
@@ -169,7 +187,19 @@ def quick_adjust(request, stock_id):
 @require_http_methods(["POST"])
 def save_count(request, location_id):
     """Save current stock count for a location."""
+    # Check authentication
+    if not request.user.is_authenticated:
+        return redirect('inventory:not_logged_in')
+
     location = get_object_or_404(Location, id=location_id, is_active=True)
+
+    # Authorization: Check if user has access to this location
+    if not request.user.is_staff:
+        if not (hasattr(request.user, 'location') and request.user.location and request.user.location.id == location_id):
+            messages.error(request, 'Permission denied: You can only save counts for your assigned location.')
+            if hasattr(request.user, 'location') and request.user.location:
+                return redirect('stock:location_detail', location_id=request.user.location.id)
+            return redirect('inventory:index')
 
     try:
         # Get all current stock for this location
